@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>מחשבון מע"מ</title>
+
+  <style>
+    :root{
+      --bg:#ececec;
+      --panel:#12172a;
+      --panel-2:#171d33;
+      --text:#eef2ff;
+      --muted:#8e95b5;
+      --line:#313a63;
+
+      --mint:#2af0c9;
+      --mint-soft:#1fe0bf;
+
+      --green:#2af0c9;
+      --yellow:#ffd35c;
+      --blue:#5a86ff;
+      --purple:#775bff;
+      --red:#ff5d82;
+
+      --shadow:0 12px 28px rgba(8,12,30,.18);
+      --radius:26px;
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:#111;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+    }
+
+    .app{
+      max-width:1200px;
+      margin:0 auto;
+      padding:20px 16px 40px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .title-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      margin:0;
+      font-size:34px;
+      line-height:1.05;
+      font-weight:900;
+      color:#10131d;
+    }
+
+    .subtitle{
+      margin:4px 0 0;
+      color:#333a52;
+      font-size:17px;
+      font-weight:700;
+    }
+
+    .control-bar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .vat-select,
+    .action-btn{
+      border:none;
+      border-radius:18px;
+      padding:12px 16px;
+      font-size:17px;
+      font-weight:800;
+      background:#fff;
+      color:#141827;
+      box-shadow:0 4px 14px rgba(0,0,0,.08);
+    }
+
+    .action-btn{
+      cursor:pointer;
+    }
+
+    .action-btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .action-btn:active{
+      transform:translateY(0);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+      margin-top:16px;
+    }
+
+    .card{
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:2px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px 24px 24px;
+      min-height:250px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      top:0;
+      bottom:0;
+      right:0;
+      width:10px;
+      border-radius:0 var(--radius) var(--radius) 0;
+      background:var(--accent,#5a86ff);
+      box-shadow:0 0 18px color-mix(in srgb, var(--accent,#5a86ff) 60%, transparent);
+    }
+
+    .card.highlight{
+      box-shadow:
+        0 14px 32px rgba(0,0,0,.18),
+        0 0 0 2px color-mix(in srgb, var(--accent,#2af0c9) 85%, white 15%),
+        0 0 24px color-mix(in srgb, var(--accent,#2af0c9) 55%, transparent);
+    }
+
+    .card-title{
+      color:var(--muted);
+      font-size:29px;
+      font-weight:900;
+      line-height:1.2;
+      margin:0 0 18px;
+      letter-spacing:.2px;
+    }
+
+    .card-value{
+      font-size:66px;
+      font-weight:1000;
+      line-height:1;
+      margin:0 0 16px;
+      color:var(--value,#fff);
+      white-space:nowrap;
+    }
+
+    .card-sub{
+      color:#727a9c;
+      font-size:28px;
+      font-weight:500;
+      margin:0;
+      line-height:1.25;
+    }
+
+    .panel{
+      margin-top:28px;
+      background:#fff;
+      border-radius:24px;
+      padding:22px 18px;
+      box-shadow:0 8px 24px rgba(0,0,0,.06);
+    }
+
+    .panel h2{
+      margin:0 0 18px;
+      font-size:28px;
+      color:#111827;
+    }
+
+    .section{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .box{
+      background:#f5f7fb;
+      border:1px solid #e2e8f0;
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .box h3{
+      margin:0 0 10px;
+      font-size:20px;
+      color:#111827;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns:1fr 150px;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .row:last-child{
+      margin-bottom:0;
+    }
+
+    input{
+      width:100%;
+      border:1px solid #d6ddeb;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:16px;
+      background:#fff;
+      color:#111827;
+      outline:none;
+    }
+
+    input:focus{
+      border-color:#5a86ff;
+      box-shadow:0 0 0 3px rgba(90,134,255,.12);
+    }
+
+    .mini-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:11px 14px;
+      font-size:15px;
+      font-weight:800;
+      cursor:pointer;
+      background:#111827;
+      color:#fff;
+    }
+
+    .btn.secondary{
+      background:#e9eef8;
+      color:#111827;
+    }
+
+    .btn.green{
+      background:#15c89a;
+      color:#06241c;
+    }
+
+    .summary{
+      margin-top:22px;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      border-radius:18px;
+      padding:18px;
+      font-size:20px;
+      color:#111827;
+      line-height:1.8;
+      font-weight:700;
+    }
+
+    .footer-note{
+      margin-top:16px;
+      color:#5b647f;
+      font-size:15px;
+      text-align:center;
+    }
+
+    @media (max-width: 1100px){
+      .grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .card{
+        min-height:220px;
+      }
+
+      .card-title{
+        font-size:24px;
+      }
+
+      .card-value{
+        font-size:52px;
+      }
+
+      .card-sub{
+        font-size:22px;
+      }
+    }
+
+    @media (max-width: 740px){
+      .app{
+        padding:14px 12px 28px;
+      }
+
+      .title{
+        font-size:28px;
+      }
+
+      .subtitle{
+        font-size:15px;
+      }
+
+      .grid{
+        grid-template-columns:1fr;
+        gap:14px;
+      }
+
+      .card{
+        min-height:auto;
+        padding:22px 18px 18px;
+      }
+
+      .card-title{
+        font-size:18px;
+        margin-bottom:14px;
+      }
+
+      .card-value{
+        font-size:34px;
+        margin-bottom:10px;
+      }
+
+      .card-sub{
+        font-size:16px;
+      }
+
+      .section{
+        grid-template-columns:1fr;
+      }
+
+      .row{
+        grid-template-columns:1fr;
+      }
+
+      .vat-select,
+      .action-btn{
+        width:100%;
+      }
+
+      .control-bar{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <div>
+          <h1 class="title">מחשבון מע"מ</h1>
+          <div class="subtitle">מחשבון מלא, מעוצב, ועובד בקובץ אחד</div>
+        </div>
+      </div>
+
+      <div class="control-bar">
+        <select id="vatRate" class="vat-select">
+          <option value="18">מע"מ 18%</option>
+          <option value="17">מע"מ 17%</option>
+        </select>
+
+        <button class="action-btn" id="calcBtn">חשב עכשיו</button>
+        <button class="action-btn" id="resetBtn">איפוס</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" style="--accent: var(--mint); --value: #ffffff;">
+        <div>
+          <h3 class="card-title">הכנסות כולל מע"מ</h3>
+          <p class="card-value" id="incomeGross">₪13,860.00</p>
+        </div>
+        <p class="card-sub">סך תקבולים</p>
+      </div>
+
+      <div class="card" style="--accent: var(--mint); --value: var(--mint);">
+        <div>
+          <h3 class="card-title">מע"מ עסקאות</h3>
+          <p class="card-value" id="salesVat">₪2,114.24</p>
+        </div>
+        <p class="card-sub">גביית לקוחות</p>
+      </div>
+
+      <div class="card" style="--accent: var(--mint); --value: var(--mint);">
+        <div>
+          <h3 class="card-title">הכנסות לפני מע"מ</h3>
+          <p class="card-value" id="incomeNet">₪11,745.76</p>
+        </div>
+        <p class="card-sub">בסיס</p>
+      </div>
+
+      <div class="card" style="--accent: var(--yellow); --value: var(--yellow);">
+        <div>
+          <h3 class="card-title">הוצאות ללא מע"מ</h3>
+          <p class="card-value" id="expensesNoVat">₪1,050.00</p>
+        </div>
+        <p class="card-sub">ללא זיכוי</p>
+      </div>
+
+      <div class="card" style="--accent: var(--blue); --value: var(--blue);">
+        <div>
+          <h3 class="card-title">מע"מ תשומות</h3>
+          <p class="card-value" id="purchaseVat">₪248.03</p>
+        </div>
+        <p class="card-sub">לקיזוז</p>
+      </div>
+
+      <div class="card" style="--accent: var(--blue); --value: var(--blue);">
+        <div>
+          <h3 class="card-title">הוצאות לפני מע"מ</h3>
+          <p class="card-value" id="expensesVatableNet">₪1,377.97</p>
+        </div>
+        <p class="card-sub">הוצ' עם מע"מ</p>
+      </div>
+
+      <div class="card highlight" style="--accent: var(--green); --value: var(--green);">
+        <div>
+          <h3 class="card-title">רווח נטו סופי</h3>
+          <p class="card-value" id="finalProfit">₪7,451.59</p>
+        </div>
+        <p class="card-sub">אחרי מע"מ</p>
+      </div>
+
+      <div class="card" style="--accent: var(--purple); --value: #ffffff;">
+        <div>
+          <h3 class="card-title">רווח לפני מע"מ</h3>
+          <p class="card-value" id="profitBeforeVat">₪9,317.80</p>
+        </div>
+        <p class="card-sub">הכנסות פחות הוצ'</p>
+      </div>
+
+      <div class="card" style="--accent: var(--red); --value: var(--red);">
+        <div>
+          <h3 class="card-title">מע"מ לתשלום</h3>
+          <p class="card-value" id="vatToPay">₪1,866.20</p>
+        </div>
+        <p class="card-sub">לרשות המסים</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>הזנת נתונים</h2>
+
+      <div class="section">
+        <div class="box">
+          <h3>הכנסות כולל מע"מ</h3>
+          <div id="incomeList"></div>
+          <div class="mini-actions">
+            <button class="btn green" id="addIncomeBtn">+ הוסף הכנסה</button>
+          </div>
+        </div>
+
+        <div class="box">
+          <h3>הוצאות עם מע"מ</h3>
+          <div id="expenseVatList"></div>
+          <div class="mini-actions">
+            <button class="btn green" id="addExpenseVatBtn">+ הוסף הוצאה עם מע"מ</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:18px;">
+        <div class="box">
+          <h3>הוצאות ללא מע"מ</h3>
+          <div id="expenseNoVatList"></div>
+          <div class="mini-actions">
+            <button class="btn green" id="addExpenseNoVatBtn">+ הוסף הוצאה ללא מע"מ</button>
+          </div>
+        </div>
+
+        <div class="box">
+          <h3>פעולות</h3>
+          <div class="mini-actions">
+            <button class="btn" id="saveBtn">שמור בדפדפן</button>
+            <button class="btn secondary" id="loadBtn">טען שמור</button>
+            <button class="btn secondary" id="demoBtn">טען דוגמה</button>
+          </div>
+
+          <div class="summary" id="explanation">
+            מע"מ עסקאות: ₪2,114.24. מע"מ תשומות: ₪248.03.<br>
+            עליך לשלם מע"מ של ₪1,866.20.
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        כל העיצוב נמצא בתוך הקובץ הזה, לכן ב-Kodex הוא לא אמור ליפול ללבן בגלל קבצים חסרים.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const currency = new Intl.NumberFormat('he-IL', {
+      style: 'currency',
+      currency: 'ILS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    const incomeList = document.getElementById('incomeList');
+    const expenseVatList = document.getElementById('expenseVatList');
+    const expenseNoVatList = document.getElementById('expenseNoVatList');
+
+    const els = {
+      incomeGross: document.getElementById('incomeGross'),
+      salesVat: document.getElementById('salesVat'),
+      incomeNet: document.getElementById('incomeNet'),
+      expensesNoVat: document.getElementById('expensesNoVat'),
+      purchaseVat: document.getElementById('purchaseVat'),
+      expensesVatableNet: document.getElementById('expensesVatableNet'),
+      finalProfit: document.getElementById('finalProfit'),
+      profitBeforeVat: document.getElementById('profitBeforeVat'),
+      vatToPay: document.getElementById('vatToPay'),
+      explanation: document.getElementById('explanation'),
+      vatRate: document.getElementById('vatRate')
+    };
+
+    let state = {
+      vatRate: 18,
+      incomes: [
+        { name: 'הכנסות בסיס', amount: 13860.00 }
+      ],
+      expensesVat: [
+        { name: 'הוצאות עם מע"מ', amount: 1626.00 }
+      ],
+      expensesNoVat: [
+        { name: 'הוצאות ללא מע"מ', amount: 1050.00 }
+      ]
+    };
+
+    function safeNumber(value) {
+      const n = parseFloat(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function fmt(num) {
+      return currency.format(num || 0);
+    }
+
+    function createRow(item, listName, index) {
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.innerHTML = `
+        <input type="text" placeholder="שם קטגוריה" value="${escapeHtml(item.name)}" data-list="${listName}" data-index="${index}" data-field="name">
+        <input type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${item.amount}" data-list="${listName}" data-index="${index}" data-field="amount">
+      `;
+      return div;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function renderInputs() {
+      incomeList.innerHTML = '';
+      expenseVatList.innerHTML = '';
+      expenseNoVatList.innerHTML = '';
+
+      state.incomes.forEach((item, i) => incomeList.appendChild(createRow(item, 'incomes', i)));
+      state.expensesVat.forEach((item, i) => expenseVatList.appendChild(createRow(item, 'expensesVat', i)));
+      state.expensesNoVat.forEach((item, i) => expenseNoVatList.appendChild(createRow(item, 'expensesNoVat', i)));
+    }
+
+    function readInputs() {
+      document.querySelectorAll('input[data-list]').forEach(input => {
+        const list = input.dataset.list;
+        const index = Number(input.dataset.index);
+        const field = input.dataset.field;
+
+        if (!state[list] || !state[list][index]) return;
+
+        if (field === 'name') {
+          state[list][index][field] = input.value;
+        } else {
+          state[list][index][field] = safeNumber(input.value);
+        }
+      });
+
+      state.vatRate = safeNumber(els.vatRate.value) || 18;
+    }
+
+    function sum(list) {
+      return list.reduce((acc, item) => acc + safeNumber(item.amount), 0);
+    }
+
+    function calculate() {
+      readInputs();
+
+      const vatRate = state.vatRate / 100;
+
+      const incomeGross = sum(state.incomes);
+      const salesVat = incomeGross - (incomeGross / (1 + vatRate));
+      const incomeNet = incomeGross / (1 + vatRate);
+
+      const expensesVatGross = sum(state.expensesVat);
+      const purchaseVat = expensesVatGross - (expensesVatGross / (1 + vatRate));
+      const expensesVatableNet = expensesVatGross / (1 + vatRate);
+
+      const expensesNoVat = sum(state.expensesNoVat);
+
+      const profitBeforeVat = incomeNet - expensesVatableNet - expensesNoVat;
+      const vatToPay = salesVat - purchaseVat;
+      const finalProfit = profitBeforeVat - vatToPay;
+
+      els.incomeGross.textContent = fmt(incomeGross);
+      els.salesVat.textContent = fmt(salesVat);
+      els.incomeNet.textContent = fmt(incomeNet);
+      els.expensesNoVat.textContent = fmt(expensesNoVat);
+      els.purchaseVat.textContent = fmt(purchaseVat);
+      els.expensesVatableNet.textContent = fmt(expensesVatableNet);
+      els.profitBeforeVat.textContent = fmt(profitBeforeVat);
+      els.vatToPay.textContent = fmt(vatToPay);
+      els.finalProfit.textContent = fmt(finalProfit);
+
+      els.explanation.innerHTML = `
+        מע"מ עסקאות שגבית: <strong>${fmt(salesVat)}</strong>.<br>
+        מע"מ תשומות לקיזוז: <strong>${fmt(purchaseVat)}</strong>.<br>
+        עליך לשלם מע"מ של <strong>${fmt(vatToPay)}</strong>.<br>
+        הרווח נטו הסופי שלך אחרי כל ההוצאות והמע"מ הוא <strong>${fmt(finalProfit)}</strong>.
+      `;
+    }
+
+    function addItem(listName) {
+      state[listName].push({ name: '', amount: 0 });
+      renderInputs();
+    }
+
+    function saveState() {
+      readInputs();
+      localStorage.setItem('vat_calculator_single_file', JSON.stringify(state));
+      alert('נשמר בהצלחה');
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem('vat_calculator_single_file');
+      if (!raw) {
+        alert('אין שמירה קודמת');
+        return;
+      }
+      try {
+        state = JSON.parse(raw);
+        els.vatRate.value = String(state.vatRate || 18);
+        renderInputs();
+        calculate();
+      } catch (e) {
+        alert('השמירה פגומה או לא תקינה');
+      }
+    }
+
+    function loadDemo() {
+      state = {
+        vatRate: 18,
+        incomes: [
+          { name: 'מונה', amount: 4500 },
+          { name: 'חשבוניות דיגיטליות', amount: 3860 },
+          { name: 'גט טקסי', amount: 2500 },
+          { name: 'קפה קפה', amount: 3000 }
+        ],
+        expensesVat: [
+          { name: 'סולר', amount: 826 },
+          { name: 'רחיצה', amount: 150 },
+          { name: 'טלפון', amount: 250 },
+          { name: 'רואת חשבון', amount: 400 }
+        ],
+        expensesNoVat: [
+          { name: 'קבלני משנה', amount: 650 },
+          { name: 'הוצאה ללא מע"מ', amount: 400 }
+        ]
+      };
+      els.vatRate.value = '18';
+      renderInputs();
+      calculate();
+    }
+
+    function resetAll() {
+      state = {
+        vatRate: 18,
+        incomes: [{ name: '', amount: 0 }],
+        expensesVat: [{ name: '', amount: 0 }],
+        expensesNoVat: [{ name: '', amount: 0 }]
+      };
+      els.vatRate.value = '18';
+      renderInputs();
+      calculate();
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+    document.getElementById('addIncomeBtn').addEventListener('click', () => addItem('incomes'));
+    document.getElementById('addExpenseVatBtn').addEventListener('click', () => addItem('expensesVat'));
+    document.getElementById('addExpenseNoVatBtn').addEventListener('click', () => addItem('expensesNoVat'));
+    document.getElementById('saveBtn').addEventListener('click', saveState);
+    document.getElementById('loadBtn').addEventListener('click', loadState);
+    document.getElementById('demoBtn').addEventListener('click', loadDemo);
+    document.getElementById('vatRate').addEventListener('change', calculate);
+
+    document.addEventListener('input', (e) => {
+      if (e.target.matches('input[data-list]')) {
+        calculate();
+      }
+    });
+
+    renderInputs();
+    calculate();
+  </script>
+</body>
+</html>
