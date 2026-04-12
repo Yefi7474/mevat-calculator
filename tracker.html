@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מעקב הכנסות</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #0d0d1a;
+      color: #fff;
+      font-family: Arial, "Segoe UI", sans-serif;
+    }
+
+    .app { min-height: 100vh; }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(180deg,#0f1729 0%,#0d1520 100%);
+      border-bottom: 1px solid #1e2d3d;
+      padding: 18px 16px 0;
+      box-shadow: 0 2px 20px #00000088;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      margin: 0;
+      flex: 1;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .chip {
+      background: #2ECC7120;
+      color: #2ECC71;
+      border: 1px solid #2ECC7144;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+    }
+
+    .tab {
+      background: transparent;
+      border: none;
+      color: #666;
+      padding: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tab.active {
+      color: #3498DB;
+      border-bottom-color: #3498DB;
+    }
+
+    .body {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 14px 60px;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1c2a3a;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      color: #ccc;
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 14px;
+    }
+
+    .label {
+      color: #777;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .input {
+      width: 100%;
+      background: #0a0f1a;
+      border: 1px solid #1e2d3d;
+      border-radius: 10px;
+      color: #fff;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      padding: 13px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-green { background: linear-gradient(135deg,#2ECC71,#27AE60); }
+    .btn-blue { background: linear-gradient(135deg,#2980B9,#3498DB); }
+    .btn-red { background: linear-gradient(135deg,#922b21,#E74C3C); }
+    .btn-purple { background: linear-gradient(135deg,#5B2D91,#8E44AD); }
+    .btn-gray { background: #333; color: #aaa; }
+
+    .types-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .type-btn {
+      background: #151c2e;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      color: #777;
+      padding: 10px 4px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-height: 72px;
+      justify-content: center;
+    }
+
+    .type-btn .icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .type-btn .text {
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .banner {
+      background: linear-gradient(135deg,#0f2a14,#0a1f0d);
+      border: 1px solid #2ECC7122;
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 10px;
+    }
+
+    .summary-card {
+      border: 1px solid;
+      border-radius: 12px;
+      padding: 14px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .empty {
+      color: #555;
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+    }
+
+    .entry-row, .history-row, .settings-row {
+      background: #0a0f1a;
+      border: 1px solid #1c2a3a;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .history-row {
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .settings-row {
+      gap: 14px;
+    }
+
+    .entry-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .entry-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .tiny {
+      font-size: 11px;
+      color: #555;
+    }
+
+    .report-box {
+      background: #0a0f1a;
+      border: 1px solid #1c2a3a;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #ccc;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 12px;
+      direction: rtl;
+      text-align: right;
+      font-family: Arial, sans-serif;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 700;
+      z-index: 300;
+      font-size: 14px;
+      box-shadow: 0 4px 20px #00000077;
+      white-space: nowrap;
+      display: none;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: #000000cc;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .modal {
+      background: #111827;
+      border: 1px solid #2a3a4a;
+      border-radius: 20px;
+      padding: 24px;
+      width: min(95vw, 440px);
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    .icon-pick-grid {
+      display: grid;
+      grid-template-columns: repeat(10,1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .icon-pick {
+      border-radius: 8px;
+      font-size: 18px;
+      padding: 5px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d1117;
+      border: 2px solid #2a3a4a;
+      cursor: pointer;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(9,1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .color-pick {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 3px solid transparent;
+      cursor: pointer;
+    }
+
+    .preview-type {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .preview-type .type-btn {
+      min-width: 110px;
+      pointer-events: none;
+      padding: 16px 28px;
+    }
+
+    @media (max-width: 600px) {
+      .summary-grid {
+        grid-template-columns: repeat(2,1fr);
+      }
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="toast" class="toast"></div>
+
+    <div class="header">
+      <div class="header-top">
+        <span style="font-size:30px;">💰</span>
+        <h1 class="title">מעקב הכנסות</h1>
+        <span id="dateChip" class="chip"></span>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-view="today">📋 יומי</button>
+        <button class="tab" data-view="history">📅 היסטוריה</button>
+        <button class="tab" data-view="reports">📊 דוחות</button>
+        <button class="tab" data-view="settings">⚙️ הגדרות</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div id="view-today" class="view"></div>
+      <div id="view-history" class="view" style="display:none;"></div>
+      <div id="view-reports" class="view" style="display:none;"></div>
+      <div id="view-settings" class="view" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div id="modalOverlay" class="overlay">
+    <div id="modalBox" class="modal"></div>
+  </div>
+
+  <script>
+    const DEFAULT_TYPES = [
+      { id: "cash", label: "מזומן", icon: "💵", color: "#2ECC71" },
+      { id: "bit", label: "ביט", icon: "📱", color: "#3498DB" },
+      { id: "bon_tour", label: "בון תור", icon: "🎟️", color: "#9B59B6" },
+      { id: "yigal", label: "יגאל", icon: "🏢", color: "#E67E22" },
+      { id: "credit", label: "אשראי", icon: "💳", color: "#E74C3C" },
+      { id: "other", label: "שונות", icon: "📝", color: "#95A5A6" }
+    ];
+
+    const COLORS = [
+      "#2ECC71", "#27AE60", "#3498DB", "#2980B9", "#9B59B6", "#8E44AD",
+      "#E67E22", "#D35400", "#E74C3C", "#C0392B", "#F1C40F", "#F39C12",
+      "#1ABC9C", "#16A085", "#95A5A6", "#7F8C8D", "#EC407A", "#AB47BC"
+    ];
+
+    const ICONS = [
+      "💵", "💳", "📱", "🏢", "🎟️", "📝", "🏦", "💴", "💶", "💷",
+      "🧾", "📊", "🪙", "💰", "💸", "🏪", "🛒", "🎁", "🤝", "📦"
+    ];
+
+    const DK = "income_data_v3";
+    const TK = "income_types_v3";
+
+    const state = {
+      data: loadData(),
+      types: loadTypes(),
+      date: today(),
+      view: "today",
+      form: { type: "", amount: "", note: "" },
+      editId: null,
+      editForm: { type: "", amount: "", note: "" },
+      rptDate: today()
+    };
+
+    if (!state.form.type && state.types.length) {
+      state.form.type = state.types[0].id;
+    }
+
+    function loadData() {
+      try {
+        return JSON.parse(localStorage.getItem(DK) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function loadTypes() {
+      try {
+        const t = JSON.parse(localStorage.getItem(TK));
+        return Array.isArray(t) && t.length ? t : JSON.parse(JSON.stringify(DEFAULT_TYPES));
+      } catch {
+        return JSON.parse(JSON.stringify(DEFAULT_TYPES));
+      }
+    }
+
+    function saveAll() {
+      try {
+        localStorage.setItem(DK, JSON.stringify(state.data));
+        localStorage.setItem(TK, JSON.stringify(state.types));
+      } catch {}
+    }
+
+    function today() {
+      return new Date().toISOString().split("T")[0];
+    }
+
+    function fDate(d) {
+      const parts = d.split("-");
+      return parts[2] + "/" + parts[1] + "/" + parts[0];
+    }
+
+    function fMoney(n) {
+      return "₪" + Number(n || 0).toLocaleString("he-IL", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function uid() {
+      return "t" + Date.now() + Math.floor(Math.random() * 1000);
+    }
+
+    function heDay(ds) {
+      return ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"][new Date(ds).getDay()];
+    }
+
+    function heMonth(ds) {
+      const parts = ds.split("-");
+      const y = parts[0];
+      const m = Number(parts[1]);
+      return [
+        "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
+        "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"
+      ][m - 1] + " " + y;
+    }
+
+    function weekDates(ds) {
+      const d = new Date(ds);
+      const s = new Date(d);
+      s.setDate(d.getDate() - d.getDay());
+      return Array.from({ length: 7 }, function(_, i) {
+        const x = new Date(s);
+        x.setDate(s.getDate() + i);
+        return x.toISOString().split("T")[0];
+      });
+    }
+
+    function monthDates(ds) {
+      const parts = ds.split("-");
+      const y = Number(parts[0]);
+      const m = Number(parts[1]);
+      const days = new Date(y, m, 0).getDate();
+      return Array.from({ length: days }, function(_, i) {
+        return parts[0] + "-" + parts[1] + "-" + String(i + 1).padStart(2, "0");
+      });
+    }
+
+    function toast(msg, kind) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.style.display = "block";
+      el.style.background =
+        kind === "err" ? "#E74C3C" :
+        kind === "info" ? "#3498DB" :
+        "#2ECC71";
+
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(function() {
+        el.style.display = "none";
+      }, 2500);
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function openModal(html) {
+      document.getElementById("modalBox").innerHTML = html;
+      document.getElementById("modalOverlay").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+      document.getElementById("modalBox").innerHTML = "";
+    }
+
+    document.getElementById("modalOverlay").addEventListener("click", function(e) {
+      if (e.target.id === "modalOverlay") closeModal();
+    });
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+          .then(function() { toast("הועתק בהצלחה"); })
+          .catch(function() { fallbackCopy(text); });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toast("הועתק בהצלחה");
+    }
+
+    function addEntry() {
+      if (!state.form.amount || isNaN(state.form.amount) || Number(state.form.amount) <= 0) {
+        toast("יש להזין סכום תקין", "err");
+        return;
+      }
+      if (!state.form.type) {
+        toast("יש לבחור סוג", "err");
+        return;
+      }
+
+      const entry = {
+        id: Date.now(),
+        type: state.form.type,
+        amount: Number(parseFloat(state.form.amount).toFixed(2)),
+        note: (state.form.note || "").trim(),
+        time: new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })
+      };
+
+      if (!state.data[state.date]) state.data[state.date] = [];
+      state.data[state.date].push(entry);
+
+      state.form.amount = "";
+      state.form.note = "";
+      saveAll();
+      renderAll();
+      toast("הכנסה נוספה ✓");
+    }
+
+    function deleteEntry(id) {
+      state.data[state.date] = (state.data[state.date] || []).filter(function(e) {
+        return e.id !== id;
+      });
+      saveAll();
+      renderAll();
+      closeModal();
+      toast("נמחקה", "info");
+    }
+
+    function startEdit(id) {
+      const entry = (state.data[state.date] || []).find(function(e) {
+        return e.id === id;
+      });
+      if (!entry) return;
+      state.editId = id;
+      state.editForm = {
+        type: entry.type,
+        amount: String(entry.amount),
+        note: entry.note || ""
+      };
+      renderToday();
+    }
+
+    function saveEdit(id) {
+      if (!state.editForm.amount || isNaN(state.editForm.amount) || Number(state.editForm.amount) <= 0) {
+        toast("יש להזין סכום תקין", "err");
+        return;
+      }
+
+      state.data[state.date] = (state.data[state.date] || []).map(function(e) {
+        if (e.id !== id) return e;
+        return {
+          id: e.id,
+          type: state.editForm.type,
+          amount: Number(parseFloat(state.editForm.amount).toFixed(2)),
+          note: (state.editForm.note || "").trim(),
+          time: e.time
+        };
+      });
+
+      state.editId = null;
+      saveAll();
+      renderAll();
+      toast("עודכן ✓");
+    }
+
+    function cancelEdit() {
+      state.editId = null;
+      renderToday();
+    }
+
+    function openDeleteEntryModal(id) {
+      openModal(
+        '<p style="color:#fff;font-size:18px;text-align:center;margin-bottom:24px;">האם למחוק רשומה זו?</p>' +
+        '<div class="row">' +
+        '<button class="btn btn-red" style="flex:1;" onclick="deleteEntry(' + id + ')">כן, מחק</button>' +
+        '<button class="btn btn-gray" style="flex:1;" onclick="closeModal()">ביטול</button>' +
+        '</div>'
+      );
+    }
+
+    function openAddTypeModal() {
+      openTypeModal({ id: "", label: "", icon: "💵", color: "#3498DB" }, true);
+    }
+
+    function openEditTypeModal(id) {
+      const type = state.types.find(function(t) { return t.id === id; });
+      if (!type) return;
+      openTypeModal({
+        id: type.id,
+        label: type.label,
+        icon: type.icon,
+        color: type.color
+      }, false);
+    }
+
+    function openTypeModal(typeObj, isNew) {
+      window.__typeDraft = {
+        id: typeObj.id,
+        label: typeObj.label,
+        icon: typeObj.icon,
+        color: typeObj.color
+      };
+
+      let iconsHtml = "";
+      ICONS.forEach(function(ic) {
+        iconsHtml += '<button class="icon-pick" id="iconpick-' + encodeURIComponent(ic) + '" onclick="pickTypeIcon(\'' + encodeURIComponent(ic) + '\')">' + ic + '</button>';
+      });
+
+      let colorsHtml = "";
+      COLORS.forEach(function(c) {
+        colorsHtml += '<button class="color-pick" id="colorpick-' + c.replace("#","") + '" onclick="pickTypeColor(\'' + c + '\')" style="background:' + c + ';"></button>';
+      });
+
+      openModal(
+        '<h3 style="color:#fff;margin:0 0 20px;font-size:18px;text-align:center;">' + (isNew ? "➕ הוספת סוג תקבול" : "✏️ עריכת סוג תקבול") + '</h3>' +
+        '<label class="label">שם הסוג</label>' +
+        '<input id="typeLabel" class="input" type="text" placeholder="לדוגמא: פייפאל" value="' + escapeHtml(typeObj.label) + '" oninput="updateTypeDraft(\'label\', this.value)">' +
+        '<label class="label">אייקון</label>' +
+        '<div class="icon-pick-grid">' + iconsHtml + '</div>' +
+        '<input id="typeIconInput" class="input" type="text" placeholder="או הדבק אימוג׳י ידנית" value="' + escapeHtml(typeObj.icon) + '" style="text-align:center;font-size:22px;" oninput="updateTypeDraft(\'icon\', this.value)">' +
+        '<label class="label">צבע</label>' +
+        '<div class="color-grid">' + colorsHtml + '</div>' +
+        '<input id="typeColorInput" type="color" value="' + escapeHtml(typeObj.color) + '" class="input" style="height:44px;padding:4px;" oninput="updateTypeDraft(\'color\', this.value)">' +
+        '<div class="preview-type"><div id="typePreview" class="type-btn"></div></div>' +
+        '<div class="row">' +
+        '<button class="btn btn-green" style="flex:1;" onclick="saveTypeModal(' + (isNew ? "true" : "false") + ')">' + (isNew ? "הוסף" : "שמור") + '</button>' +
+        '<button class="btn btn-gray" style="flex:1;" onclick="closeModal()">ביטול</button>' +
+        '</div>'
+      );
+
+      refreshTypeModalVisuals();
+    }
+
+    function updateTypeDraft(key, value) {
+      window.__typeDraft[key] = value;
+      refreshTypeModalVisuals();
+    }
+
+    function pickTypeIcon(encoded) {
+      const ic = decodeURIComponent(encoded);
+      window.__typeDraft.icon = ic;
+      document.getElementById("typeIconInput").value = ic;
+      refreshTypeModalVisuals();
+    }
+
+    function pickTypeColor(c) {
+      window.__typeDraft.color = c;
+      document.getElementById("typeColorInput").value = c;
+      refreshTypeModalVisuals();
+    }
+
+    function refreshTypeModalVisuals() {
+      const d = window.__typeDraft || {};
+      const preview = document.getElementById("typePreview");
+      if (preview) {
+        preview.style.borderColor = d.color || "#3498DB";
+        preview.style.background = (d.color || "#3498DB") + "22";
+        preview.style.color = d.color || "#3498DB";
+        preview.innerHTML =
+          '<span class="icon">' + escapeHtml(d.icon || "💵") + '</span>' +
+          '<span class="text">' + escapeHtml(d.label || "תצוגה") + '</span>';
+      }
+
+      ICONS.forEach(function(ic) {
+        const el = document.getElementById("iconpick-" + encodeURIComponent(ic));
+        if (!el) return;
+        el.style.background = d.icon === ic ? "#3498DB33" : "#0d1117";
+        el.style.borderColor = d.icon === ic ? "#3498DB" : "#2a3a4a";
+      });
+
+      COLORS.forEach(function(c) {
+        const el = document.getElementById("colorpick-" + c.replace("#",""));
+        if (!el) return;
+        el.style.borderColor = d.color === c ? "#fff" : "transparent";
+      });
+    }
+
+    function saveTypeModal(isNew) {
+      const d = window.__typeDraft;
+      if (!d || !String(d.label || "").trim()) {
+        toast("יש להזין שם", "err");
+        return;
+      }
+
+      if (isNew) {
+        state.types.push({
+          id: uid(),
+          label: String(d.label).trim(),
+          icon: d.icon || "💵",
+          color: d.color || "#3498DB"
+        });
+      } else {
+        state.types = state.types.map(function(t) {
+          if (t.id === d.id) {
+            return {
+              id: t.id,
+              label: String(d.label).trim(),
+              icon: d.icon || "💵",
+              color: d.color || "#3498DB"
+            };
+          }
+          return t;
+        });
+      }
+
+      if (!state.types.find(function(t) { return t.id === state.form.type; }) && state.types.length) {
+        state.form.type = state.types[0].id;
+      }
+
+      saveAll();
+      renderAll();
+      closeModal();
+      toast(isNew ? "סוג נוסף ✓" : "סוג עודכן ✓");
+    }
+
+    function openDeleteTypeModal(id) {
+      const type = state.types.find(function(t) { return t.id === id; });
+      if (!type) return;
+      const cnt = Object.values(state.data).flat().filter(function(e) {
+        return e.type === type.id;
+      }).length;
+
+      openModal(
+        '<div style="text-align:center;font-size:44px;margin-bottom:12px;">' + escapeHtml(type.icon) + '</div>' +
+        '<p style="color:#fff;font-size:17px;text-align:center;margin-bottom:8px;">למחוק את <span style="color:' + type.color + ';font-weight:800;">"' + escapeHtml(type.label) + '"</span>?</p>' +
+        (cnt > 0 ? '<p style="color:#E74C3C;font-size:13px;text-align:center;margin-bottom:16px;">⚠️ יש ' + cnt + ' רשומות לסוג זה</p>' : '') +
+        '<p style="color:#aaa;font-size:13px;text-align:center;margin-bottom:18px;">הרשומות הישנות יעברו אוטומטית ל"שונות"</p>' +
+        '<div class="row">' +
+        '<button class="btn btn-red" style="flex:1;" onclick="deleteType(\'' + id + '\')">כן, מחק</button>' +
+        '<button class="btn btn-gray" style="flex:1;" onclick="closeModal()">ביטול</button>' +
+        '</div>'
+      );
+    }
+
+    function deleteType(id) {
+      if (state.types.length <= 1) {
+        toast("חייב להישאר לפחות סוג אחד", "err");
+        return;
+      }
+
+      let fallback = state.types.find(function(t) {
+        return t.id === "other" && t.id !== id;
+      });
+      if (!fallback) {
+        fallback = state.types.find(function(t) {
+          return t.id !== id;
+        });
+      }
+      if (!fallback) return;
+
+      Object.keys(state.data).forEach(function(dateKey) {
+        state.data[dateKey] = (state.data[dateKey] || []).map(function(e) {
+          if (e.type === id) {
+            return {
+              id: e.id,
+              type: fallback.id,
+              amount: e.amount,
+              note: e.note,
+              time: e.time
+            };
+          }
+          return e;
+        });
+      });
+
+      state.types = state.types.filter(function(t) {
+        return t.id !== id;
+      });
+
+      if (state.form.type === id) state.form.type = fallback.id;
+      if (state.editForm.type === id) state.editForm.type = fallback.id;
+
+      saveAll();
+      renderAll();
+      closeModal();
+      toast("הסוג נמחק והרשומות הועברו", "info");
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify({ data: state.data, types: state.types }, null, 2)], {
+        type: "application/json"
+      });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "income_" + today() + ".json";
+      a.click();
+      toast("יוצא בהצלחה ✓");
+    }
+
+    function resetAllConfirm() {
+      openModal(
+        '<div style="text-align:center;font-size:52px;margin-bottom:12px;">⚠️</div>' +
+        '<p style="color:#fff;font-size:18px;text-align:center;font-weight:700;margin-bottom:8px;">איפוס מלא</p>' +
+        '<p style="color:#aaa;font-size:14px;text-align:center;margin-bottom:24px;line-height:1.6;">ימחק את כל ההכנסות וישחזר את סוגי התקבול לברירת המחדל. פעולה זו בלתי הפיכה.</p>' +
+        '<div class="row">' +
+        '<button class="btn btn-red" style="flex:1;" onclick="resetAll()">כן, אפס הכל</button>' +
+        '<button class="btn btn-gray" style="flex:1;" onclick="closeModal()">ביטול</button>' +
+        '</div>'
+      );
+    }
+
+    function resetAll() {
+      state.data = {};
+      state.types = JSON.parse(JSON.stringify(DEFAULT_TYPES));
+      state.date = today();
+      state.view = "today";
+      state.form = { type: state.types[0].id, amount: "", note: "" };
+      state.editId = null;
+      state.editForm = { type: "", amount: "", note: "" };
+      state.rptDate = today();
+      saveAll();
+      closeModal();
+      renderAll();
+      toast("המערכת אופסה בהצלחה ✓", "info");
+    }
+
+    function rptDaily(ds) {
+      const e = state.data[ds] || [];
+      if (!e.length) return '📅 *דו"ח יומי - ' + fDate(ds) + '*\n\nאין הכנסות ליום זה.';
+
+      const tot = e.reduce(function(s, x) { return s + x.amount; }, 0);
+      const L = [
+        '📅 *דו"ח הכנסות יומי*',
+        '🗓️ ' + fDate(ds) + ' | יום ' + heDay(ds),
+        '━━━━━━━━━━━━━━━'
+      ];
+
+      state.types.forEach(function(pt) {
+        const te = e.filter(function(x) { return x.type === pt.id; });
+        if (!te.length) return;
+        const subTotal = te.reduce(function(s, x) { return s + x.amount; }, 0);
+        L.push('\n' + pt.icon + ' *' + pt.label + '*: ' + fMoney(subTotal));
+        te.forEach(function(x) {
+          L.push('   • ' + fMoney(x.amount) + (x.note ? ' (' + x.note + ')' : ''));
+        });
+      });
+
+      L.push(
+        '\n━━━━━━━━━━━━━━━',
+        '💰 *סה"כ: ' + fMoney(tot) + '*',
+        '📊 ' + e.length + ' רשומות'
+      );
+
+      return L.join('\n');
+    }
+
+    function rptWeekly(ds) {
+      const wd = weekDates(ds);
+      const all = wd.flatMap(function(d) {
+        return (state.data[d] || []).map(function(e) {
+          return { id: e.id, type: e.type, amount: e.amount, note: e.note, time: e.time, date: d };
+        });
+      });
+      const tot = all.reduce(function(s, e) { return s + e.amount; }, 0);
+
+      const L = [
+        '📊 *דו"ח הכנסות שבועי*',
+        '🗓️ ' + fDate(wd[0]) + ' — ' + fDate(wd[6]),
+        '━━━━━━━━━━━━━━━',
+        '\n*סיכום לפי סוג:*'
+      ];
+
+      state.types.forEach(function(pt) {
+        const t = all.filter(function(e) { return e.type === pt.id; }).reduce(function(s, e) {
+          return s + e.amount;
+        }, 0);
+        if (t > 0) L.push(pt.icon + ' ' + pt.label + ': ' + fMoney(t));
+      });
+
+      L.push('\n*פירוט יומי:*');
+      wd.forEach(function(d) {
+        const de = state.data[d] || [];
+        if (!de.length) return;
+        const dayTotal = de.reduce(function(s, e) { return s + e.amount; }, 0);
+        L.push('📅 ' + fDate(d) + ' (' + heDay(d) + '): ' + fMoney(dayTotal));
+      });
+
+      L.push(
+        '\n━━━━━━━━━━━━━━━',
+        '💰 *סה"כ שבועי: ' + fMoney(tot) + '*',
+        '📊 ' + all.length + ' רשומות ב-' + wd.filter(function(d) { return (state.data[d] || []).length > 0; }).length + ' ימים'
+      );
+
+      return L.join('\n');
+    }
+
+    function rptMonthly(ds) {
+      const md = monthDates(ds);
+      const all = md.flatMap(function(d) {
+        return (state.data[d] || []).map(function(e) {
+          return { id: e.id, type: e.type, amount: e.amount, note: e.note, time: e.time, date: d };
+        });
+      });
+      const tot = all.reduce(function(s, e) { return s + e.amount; }, 0);
+
+      const L = [
+        '📈 *דו"ח הכנסות חודשי*',
+        '🗓️ ' + heMonth(ds),
+        '━━━━━━━━━━━━━━━',
+        '\n*סיכום לפי סוג:*'
+      ];
+
+      state.types.forEach(function(pt) {
+        const t = all.filter(function(e) { return e.type === pt.id; }).reduce(function(s, e) {
+          return s + e.amount;
+        }, 0);
+        if (t > 0) L.push(pt.icon + ' ' + pt.label + ': ' + fMoney(t));
+      });
+
+      const active = md.filter(function(d) {
+        return (state.data[d] || []).length > 0;
+      });
+
+      if (active.length) {
+        L.push('\n*ימים פעילים (' + active.length + '):*');
+        active.forEach(function(d) {
+          const dayTotal = (state.data[d] || []).reduce(function(s, e) { return s + e.amount; }, 0);
+          L.push('📅 ' + fDate(d) + ': ' + fMoney(dayTotal));
+        });
+      }
+
+      L.push(
+        '\n━━━━━━━━━━━━━━━',
+        '💰 *סה"כ חודשי: ' + fMoney(tot) + '*',
+        '📊 ' + all.length + ' רשומות | ' + active.length + ' ימי עבודה',
+        '📉 ממוצע ליום: ' + fMoney(active.length ? tot / active.length : 0)
+      );
+
+      return L.join('\n');
+    }
+
+    function renderToday() {
+      const dayData = state.data[state.date] || [];
+      const grandTotal = dayData.reduce(function(s, e) { return s + e.amount; }, 0);
+
+      const summary = state.types.map(function(t) {
+        return {
+          id: t.id,
+          label: t.label,
+          icon: t.icon,
+          color: t.color,
+          total: dayData.filter(function(e) { return e.type === t.id; }).reduce(function(s, e) { return s + e.amount; }, 0),
+          count: dayData.filter(function(e) { return e.type === t.id; }).length
+        };
+      });
+
+      let html = '';
+      html += '<div class="card">';
+      html += '<label class="label">תאריך</label>';
+      html += '<input id="mainDate" class="input" type="date" value="' + state.date + '">';
+      html += '</div>';
+
+      html += '<div class="card">';
+      html += '<h2 class="card-title">➕ הוספת הכנסה</h2>';
+      html += '<div class="types-grid">';
+      state.types.forEach(function(t) {
+        html += '<button class="type-btn" onclick="selectType(\'' + t.id + '\')" style="border-color:' + (state.form.type === t.id ? t.color : 'transparent') + ';background:' + (state.form.type === t.id ? t.color + '22' : '#1a1a2e') + ';color:' + (state.form.type === t.id ? t.color : '#888') + ';">';
+        html += '<span class="icon">' + escapeHtml(t.icon) + '</span>';
+        html += '<span class="text">' + escapeHtml(t.label) + '</span>';
+        html += '</button>';
+      });
+      html += '</div>';
+      html += '<div class="row">';
+      html += '<input id="amountInput" class="input" type="number" placeholder="סכום ₪" value="' + escapeHtml(state.form.amount) + '" style="flex:1;margin-bottom:0;">';
+      html += '<input id="noteInput" class="input" type="text" placeholder="הערה (אופציונלי)" value="' + escapeHtml(state.form.note) + '" style="flex:2;margin-bottom:0;">';
+      html += '</div>';
+      html += '<button id="addBtn" class="btn btn-green" style="margin-top:12px;width:100%;">הוסף הכנסה</button>';
+      html += '</div>';
+
+      html += '<div class="card">';
+      html += '<h2 class="card-title">📊 סיכום יומי</h2>';
+      html += '<div class="banner">';
+      html += '<span style="color:#aaa;font-size:17px;font-weight:700;">סה"כ היום</span>';
+      html += '<span style="color:#2ECC71;font-size:34px;font-weight:900;">' + fMoney(grandTotal) + '</span>';
+      html += '</div>';
+      html += '<div class="summary-grid">';
+
+      const positiveSummary = summary.filter(function(s) { return s.total > 0; });
+      if (positiveSummary.length) {
+        positiveSummary.forEach(function(s) {
+          html += '<div class="summary-card" style="border-color:' + s.color + '55;background:' + s.color + '11;">';
+          html += '<span style="font-size:26px;">' + escapeHtml(s.icon) + '</span>';
+          html += '<span style="color:' + s.color + ';font-weight:800;font-size:15px;">' + fMoney(s.total) + '</span>';
+          html += '<span style="color:#bbb;font-size:12px;">' + escapeHtml(s.label) + '</span>';
+          html += '<span style="color:#666;font-size:11px;">' + s.count + ' רשומות</span>';
+          html += '</div>';
+        });
+      } else {
+        html += '<p class="empty" style="grid-column:1/-1;">אין הכנסות ליום זה עדיין</p>';
+      }
+
+      html += '</div>';
+      html += '</div>';
+
+      if (dayData.length > 0) {
+        html += '<div class="card">';
+        html += '<h2 class="card-title">📋 רשומות היום</h2>';
+
+        const reversed = dayData.slice().reverse();
+        reversed.forEach(function(entry) {
+          const pt = state.types.find(function(t) { return t.id === entry.type; }) || {
+            icon: "❓",
+            color: "#666",
+            label: "לא ידוע"
+          };
+
+          if (state.editId === entry.id) {
+            html += '<div class="entry-row" style="background:#1a2535;border-color:' + pt.color + '88;flex-direction:column;gap:10px;">';
+            html += '<div class="types-grid" style="width:100%;">';
+            state.types.forEach(function(t) {
+              html += '<button class="type-btn" onclick="selectEditType(\'' + t.id + '\')" style="border-color:' + (state.editForm.type === t.id ? t.color : 'transparent') + ';background:' + (state.editForm.type === t.id ? t.color + '22' : '#111') + ';color:' + (state.editForm.type === t.id ? t.color : '#888') + ';padding:6px 4px;">';
+              html += '<span style="font-size:15px;">' + escapeHtml(t.icon) + '</span>';
+              html += '<span style="font-size:10px;">' + escapeHtml(t.label) + '</span>';
+              html += '</button>';
+            });
+            html += '</div>';
+            html += '<div class="row" style="width:100%;">';
+            html += '<input id="editAmount" class="input" type="number" value="' + escapeHtml(state.editForm.amount) + '" style="flex:1;margin-bottom:0;">';
+            html += '<input id="editNote" class="input" type="text" value="' + escapeHtml(state.editForm.note) + '" style="flex:2;margin-bottom:0;">';
+            html += '</div>';
+            html += '<div class="row" style="width:100%;">';
+            html += '<button class="btn btn-green" style="flex:1;" onclick="saveEditFromUI(' + entry.id + ')">שמור</button>';
+            html += '<button class="btn btn-gray" style="flex:1;" onclick="cancelEdit()">ביטול</button>';
+            html += '</div>';
+            html += '</div>';
+          } else {
+            html += '<div class="entry-row" style="border-color:' + pt.color + '44;">';
+            html += '<div class="entry-main">';
+            html += '<span style="font-size:24px;flex-shrink:0;">' + escapeHtml(pt.icon) + '</span>';
+            html += '<div style="min-width:0;">';
+            html += '<div style="color:' + pt.color + ';font-weight:700;font-size:14px;">' + escapeHtml(pt.label) + '</div>';
+            if (entry.note) {
+              html += '<div class="small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(entry.note) + '</div>';
+            }
+            html += '<div class="tiny">' + escapeHtml(entry.time) + '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="entry-actions">';
+            html += '<span style="color:#fff;font-weight:800;font-size:15px;">' + fMoney(entry.amount) + '</span>';
+            html += '<button class="icon-btn" onclick="startEdit(' + entry.id + ')">✏️</button>';
+            html += '<button class="icon-btn" onclick="openDeleteEntryModal(' + entry.id + ')">🗑️</button>';
+            html += '</div>';
+            html += '</div>';
+          }
+        });
+
+        html += '</div>';
+      }
+
+      document.getElementById("view-today").innerHTML = html;
+
+      document.getElementById("mainDate").addEventListener("change", function() {
+        state.date = this.value;
+        renderAll();
+      });
+
+      document.getElementById("amountInput").addEventListener("input", function() {
+        state.form.amount = this.value;
+      });
+
+      document.getElementById("noteInput").addEventListener("input", function() {
+        state.form.note = this.value;
+      });
+
+      document.getElementById("amountInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") addEntry();
+      });
+
+      document.getElementById("noteInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") addEntry();
+      });
+
+      document.getElementById("addBtn").addEventListener("click", addEntry);
+
+      if (state.editId !== null) {
+        const editAmount = document.getElementById("editAmount");
+        const editNote = document.getElementById("editNote");
+        if (editAmount) {
+          editAmount.addEventListener("input", function() {
+            state.editForm.amount = this.value;
+          });
+        }
+        if (editNote) {
+          editNote.addEventListener("input", function() {
+            state.editForm.note = this.value;
+          });
+        }
+      }
+    }
+
+    function renderHistory() {
+      const histDates = Object.keys(state.data)
+        .filter(function(d) { return (state.data[d] || []).length > 0; })
+        .sort(function(a, b) { return b.localeCompare(a); });
+
+      let html = '<div class="card">';
+      html += '<h2 class="card-title">📅 היסטוריית ימים</h2>';
+
+      if (!histDates.length) {
+        html += '<p class="empty">אין נתונים עדיין</p>';
+      } else {
+        histDates.forEach(function(d) {
+          const ents = state.data[d] || [];
+          const tot = ents.reduce(function(s, e) { return s + e.amount; }, 0);
+
+          html += '<div class="history-row" onclick="goToDate(\'' + d + '\')">';
+          html += '<div>';
+          html += '<div style="color:#fff;font-weight:700;">' + fDate(d) + '</div>';
+          html += '<div class="tiny">יום ' + heDay(d) + ' | ' + ents.length + ' רשומות</div>';
+          html += '</div>';
+          html += '<div style="color:#2ECC71;font-weight:800;font-size:18px;">' + fMoney(tot) + '</div>';
+          html += '</div>';
+        });
+      }
+
+      html += '</div>';
+      document.getElementById("view-history").innerHTML = html;
+    }
+
+    function renderReports() {
+      const reports = [
+        {
+          title: '📅 דו"ח יומי',
+          color: '#2ECC71',
+          sub: fDate(state.rptDate),
+          text: rptDaily(state.rptDate)
+        },
+        {
+          title: '📊 דו"ח שבועי',
+          color: '#3498DB',
+          sub: fDate(weekDates(state.rptDate)[0]) + ' — ' + fDate(weekDates(state.rptDate)[6]),
+          text: rptWeekly(state.rptDate)
+        },
+        {
+          title: '📈 דו"ח חודשי',
+          color: '#9B59B6',
+          sub: heMonth(state.rptDate),
+          text: rptMonthly(state.rptDate)
+        }
+      ];
+
+      window.__reportsData = reports;
+
+      let html = '<div class="card">';
+      html += '<h2 class="card-title">📊 דוחות הכנסות</h2>';
+      html += '<label class="label">בחר תאריך לדוחות</label>';
+      html += '<input id="rptDateInput" class="input" type="date" value="' + state.rptDate + '">';
+      html += '</div>';
+
+      reports.forEach(function(r, i) {
+        html += '<div class="card" style="border-color:' + r.color + '33;">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;">';
+        html += '<h2 class="card-title" style="margin:0;color:' + r.color + ';">' + r.title + '</h2>';
+        html += '<span style="color:#666;font-size:12px;">' + escapeHtml(r.sub) + '</span>';
+        html += '</div>';
+        html += '<pre class="report-box">' + escapeHtml(r.text) + '</pre>';
+        html += '<div class="row">';
+        html += '<button class="btn" style="flex:1;background:linear-gradient(135deg,#25D366,#128C7E);" onclick="copyReport(' + i + ')">📋 העתק</button>';
+        html += '<button class="btn btn-purple" style="flex:1;" onclick="shareReport(' + i + ')">📤 שתף</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      document.getElementById("view-reports").innerHTML = html;
+
+      document.getElementById("rptDateInput").addEventListener("change", function() {
+        state.rptDate = this.value;
+        renderReports();
+      });
+    }
+
+    function renderSettings() {
+      let html = '<div class="card">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;">';
+      html += '<h2 class="card-title" style="margin:0;">⚙️ סוגי תקבול</h2>';
+      html += '<button class="btn btn-blue" style="padding:8px 16px;" onclick="openAddTypeModal()">＋ הוסף סוג</button>';
+      html += '</div>';
+      html += '<p style="color:#666;font-size:13px;margin-bottom:16px;">ניהול, עריכה ומחיקה של סוגי התשלום</p>';
+
+      state.types.forEach(function(t) {
+        const ae = Object.values(state.data).flat().filter(function(e) { return e.type === t.id; });
+        const total = ae.reduce(function(s, e) { return s + e.amount; }, 0);
+
+        html += '<div class="settings-row" style="border-color:' + t.color + '44;">';
+        html += '<span style="font-size:28px;">' + escapeHtml(t.icon) + '</span>';
+        html += '<div style="flex:1;">';
+        html += '<div style="color:' + t.color + ';font-weight:700;font-size:15px;">' + escapeHtml(t.label) + '</div>';
+        html += '<div class="tiny">סה"כ: ' + fMoney(total) + ' | ' + ae.length + ' רשומות</div>';
+        html += '</div>';
+        html += '<div style="display:flex;gap:8px;">';
+        html += '<button class="icon-btn" onclick="openEditTypeModal(\'' + t.id + '\')">✏️</button>';
+        html += '<button class="icon-btn" onclick="openDeleteTypeModal(\'' + t.id + '\')">🗑️</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+
+      html += '<div class="card">';
+      html += '<h2 class="card-title">🔧 ניהול נתונים</h2>';
+      html += '<div class="row">';
+      html += '<button class="btn btn-blue" style="flex:1;" onclick="exportJSON()">📤 ייצוא JSON</button>';
+      html += '<button class="btn btn-red" style="flex:1;" onclick="resetAllConfirm()">🗑️ איפוס הכל</button>';
+      html += '</div>';
+      html += '</div>';
+
+      document.getElementById("view-settings").innerHTML = html;
+    }
+
+    function renderAll() {
+      if (!state.types.find(function(t) { return t.id === state.form.type; }) && state.types.length) {
+        state.form.type = state.types[0].id;
+      }
+
+      document.getElementById("dateChip").textContent = fDate(state.date);
+
+      document.querySelectorAll(".tab").forEach(function(btn) {
+        btn.classList.toggle("active", btn.dataset.view === state.view);
+      });
+
+      document.getElementById("view-today").style.display = state.view === "today" ? "" : "none";
+      document.getElementById("view-history").style.display = state.view === "history" ? "" : "none";
+      document.getElementById("view-reports").style.display = state.view === "reports" ? "" : "none";
+      document.getElementById("view-settings").style.display = state.view === "settings" ? "" : "none";
+
+      renderToday();
+      renderHistory();
+      renderReports();
+      renderSettings();
+    }
+
+    function selectType(id) {
+      state.form.type = id;
+      renderToday();
+    }
+
+    function selectEditType(id) {
+      state.editForm.type = id;
+      renderToday();
+    }
+
+    function saveEditFromUI(id) {
+      const amountEl = document.getElementById("editAmount");
+      const noteEl = document.getElementById("editNote");
+      if (amountEl) state.editForm.amount = amountEl.value;
+      if (noteEl) state.editForm.note = noteEl.value;
+      saveEdit(id);
+    }
+
+    function goToDate(d) {
+      state.date = d;
+      state.view = "today";
+      renderAll();
+    }
+
+    function copyReport(i) {
+      const r = window.__reportsData[i];
+      if (!r) return;
+      copyText(r.text);
+    }
+
+    function shareReport(i) {
+      const r = window.__reportsData[i];
+      if (!r) return;
+
+      if (navigator.share) {
+        navigator.share({ title: r.title, text: r.text }).catch(function() {
+          copyText(r.text);
+        });
+      } else {
+        copyText(r.text);
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        state.view = this.dataset.view;
+        renderAll();
+      });
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
